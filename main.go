@@ -14,10 +14,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-var (
-	ErrNoChange = fmt.Errorf("no change to external IP address")
-)
-
 func main() {
 	app := cli.NewApp()
 
@@ -101,12 +97,10 @@ func updateRecord(client *godo.Client, domain, name string) error {
 
 	// Get the list of existing records and iterate to find the record we want to update.
 	records, resp, err := client.Domains.Records(context.Background(), domain, nil)
-	if resp != nil && resp.Body != nil {
-		resp.Body.Close()
-	}
 	if err != nil {
 		return fmt.Errorf("could not retrieve existing records (domain=%s): %s", domain, err)
 	}
+	resp.Body.Close()
 
 	var record godo.DomainRecord
 	var found bool
@@ -131,12 +125,10 @@ func updateRecord(client *godo.Client, domain, name string) error {
 		Data: ip.IP,
 	}
 	_, resp, err = client.Domains.EditRecord(context.Background(), domain, record.ID, drer)
-	if resp != nil && resp.Body != nil {
-		resp.Body.Close()
-	}
 	if err != nil {
 		return fmt.Errorf("could not update record (domain=%s, id=%d, name=%s, from=%s, to=%s): %s", domain, record.ID, name, record.Data, drer.Data, err)
 	}
+	resp.Body.Close()
 	log.Printf("updated domain record (domain=%s, id=%d, name=%s, from=%s, to=%s)", domain, record.ID, name, record.Data, drer.Data)
 
 	return nil
